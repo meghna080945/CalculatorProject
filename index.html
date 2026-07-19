@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Calculator</title>
+  <style>
+    :root {
+      --bg: #1e1e2e;
+      --panel: #2a2a3c;
+      --display: #12121c;
+      --num: #3a3a4e;
+      --num-hover: #474760;
+      --op: #f5a623;
+      --op-hover: #ffb838;
+      --fn: #5a5a72;
+      --fn-hover: #6c6c86;
+      --eq: #4caf50;
+      --eq-hover: #5bc25f;
+      --text: #f5f5f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      padding: 16px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      opacity: 0.75;
+      margin: 0 0 14px;
+    }
+
+    .calculator {
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 18px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .display {
+      background: var(--display);
+      color: var(--text);
+      font-size: 2.4rem;
+      text-align: right;
+      padding: 18px 16px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      min-height: 72px;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+      line-height: 1.1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--num);
+      padding: 18px 0;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.05s ease;
+      user-select: none;
+    }
+    button:hover { background: var(--num-hover); }
+    button:active { transform: scale(0.95); }
+
+    .fn { background: var(--fn); }
+    .fn:hover { background: var(--fn-hover); }
+
+    .op { background: var(--op); color: #1e1e2e; font-weight: bold; }
+    .op:hover { background: var(--op-hover); }
+
+    .eq { background: var(--eq); grid-row: span 2; }
+    .eq:hover { background: var(--eq-hover); }
+
+    .zero { grid-column: span 2; }
+
+    footer {
+      margin-top: 16px;
+      font-size: 0.75rem;
+      opacity: 0.5;
+      text-align: center;
+    }
+    footer a { color: inherit; }
+  </style>
+</head>
+<body>
+  <h1>AI Calculator</h1>
+
+  <div class="calculator">
+    <div class="display" id="display"></div>
+
+    <div class="grid">
+      <button class="fn" data-neg>(-)</button>
+      <button class="fn" data-del>Del</button>
+      <button class="fn" data-clr>Clr</button>
+      <button class="op" data-op="/">&divide;</button>
+
+      <button data-num="7">7</button>
+      <button data-num="8">8</button>
+      <button data-num="9">9</button>
+      <button class="op" data-op="*">&times;</button>
+
+      <button data-num="4">4</button>
+      <button data-num="5">5</button>
+      <button data-num="6">6</button>
+      <button class="op" data-op="-">&minus;</button>
+
+      <button data-num="1">1</button>
+      <button data-num="2">2</button>
+      <button data-num="3">3</button>
+      <button class="op" data-op="+">+</button>
+
+      <button class="zero" data-num="0">0</button>
+      <button data-dot>.</button>
+      <button class="eq" data-eq>=</button>
+    </div>
+  </div>
+
+  <footer>Works in any browser &mdash; no installation needed.</footer>
+
+  <script>
+    // Mirrors the logic of the original Java Swing Calculator.
+    const display = document.getElementById("display");
+    let num1 = 0;
+    let operator = null;
+
+    const getText = () => display.textContent;
+    const setText = (t) => { display.textContent = t; };
+
+    function inputNumber(n) {
+      setText(getText() + n);
+    }
+
+    function inputDot() {
+      setText(getText() + ".");
+    }
+
+    function setOperator(op) {
+      if (getText() === "" || getText() === "Error") return;
+      num1 = parseFloat(getText());
+      operator = op;
+      setText("");
+    }
+
+    function equals() {
+      if (operator === null || getText() === "" || getText() === "Error") return;
+      const num2 = parseFloat(getText());
+      let result;
+      switch (operator) {
+        case "+": result = num1 + num2; break;
+        case "-": result = num1 - num2; break;
+        case "*": result = num1 * num2; break;
+        case "/":
+          if (num2 === 0) { setText("Error"); return; }
+          result = num1 / num2;
+          break;
+      }
+      setText(String(result));
+      num1 = result;
+    }
+
+    function clear() { setText(""); }
+
+    function del() {
+      const t = getText();
+      if (t.length > 0) setText(t.slice(0, -1));
+    }
+
+    function toggleNeg() {
+      if (getText() === "" || getText() === "Error") return;
+      setText(String(parseFloat(getText()) * -1));
+    }
+
+    // Wire up buttons
+    document.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.num !== undefined) inputNumber(btn.dataset.num);
+        else if (btn.dataset.dot !== undefined) inputDot();
+        else if (btn.dataset.op !== undefined) setOperator(btn.dataset.op);
+        else if (btn.dataset.eq !== undefined) equals();
+        else if (btn.dataset.clr !== undefined) clear();
+        else if (btn.dataset.del !== undefined) del();
+        else if (btn.dataset.neg !== undefined) toggleNeg();
+      });
+    });
+
+    // Keyboard support
+    document.addEventListener("keydown", (e) => {
+      const k = e.key;
+      if (k >= "0" && k <= "9") inputNumber(k);
+      else if (k === ".") inputDot();
+      else if (["+", "-", "*", "/"].includes(k)) setOperator(k);
+      else if (k === "Enter" || k === "=") { e.preventDefault(); equals(); }
+      else if (k === "Backspace") del();
+      else if (k === "Escape") clear();
+    });
+  </script>
+</body>
+</html>
